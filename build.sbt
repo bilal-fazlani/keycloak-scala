@@ -87,6 +87,8 @@ lazy val `keycloak-data-push-cli` = project
   .settings(
     libraryDependencies ++= Seq(
       Libs.`case-app`,
-      Libs.`scala-uri`
+      Libs.`scala-uri`,
+      Libs.pprint,
+      Libs.`slf4j-simple`
     )
   )
