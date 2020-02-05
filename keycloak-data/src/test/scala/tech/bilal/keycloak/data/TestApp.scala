@@ -6,7 +6,7 @@ import zio.{IO, Task, ZIO}
 object ConfigTestApp extends zio.App {
   override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] =
     (for {
-      data <- KeycloakData.fromConfig
+      data <- KeycloakData.fromConfig()
       _    <- Task.effect(pprint.pprintln(data))
     } yield 0).orElse(ZIO.succeed(1))
 }

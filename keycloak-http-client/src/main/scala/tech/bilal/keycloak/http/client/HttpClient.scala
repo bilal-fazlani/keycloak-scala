@@ -19,6 +19,15 @@ trait HttpClient extends BorerCompat {
   protected def sendAndGetStatus[A](req: Request[Either[String, String], Nothing]): IO[RequestError, StatusCode] =
     send(req).map(_.code)
 
+  protected def sendAndGetLocation[A](req: Request[Either[String, String], Nothing]): IO[ApiError, String] =
+    send(req)
+      .map(_.headers.find(_.name.toLowerCase == "location"))
+      .flatMap(
+        IO.fromOption(_)
+          .mapError(_ => ParsingError(s"could not find location in headers for: ${req.method.method.toUpperCase} ${req.uri}"))
+      )
+      .map(_.value.split("/").last)
+
   protected def get[T: Decoder](uri: Uri)(implicit token: TokenResponse): Request[Either[Array[Byte], T], Nothing] =
     basicRequest
       .get(uri)

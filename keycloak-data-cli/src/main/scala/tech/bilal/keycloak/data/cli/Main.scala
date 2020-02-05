@@ -26,6 +26,7 @@ object Main extends CaseApp[Options] {
       _          <- data.pushTo(connection, overwrite)
       _          = if (verbose) println(s"data pushed successfully")
     } yield 0).tapError(e => Task.effect(scala.Console.err.println(e.toString))).orElse(UIO.succeed(1))
+
     exit(defaultRuntime.unsafeRun(program))
   }
 }

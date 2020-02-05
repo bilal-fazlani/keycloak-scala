@@ -4,7 +4,7 @@ import sttp.client._
 import sttp.model.StatusCode
 import tech.bilal.keycloak.http.client.ApiError.RequestError
 import tech.bilal.keycloak.http.client.dto.RoleRepresentation
-import tech.bilal.keycloak.http.client.dto.req.{CreateClient, CreateRealm, CreateUser, UserAttributeProtocolMapperConfig}
+import tech.bilal.keycloak.http.client.dto.req._
 import tech.bilal.keycloak.http.client.dto.res.{ClientNativeId, TokenResponse, UserNativeId}
 import tech.bilal.keycloak.http.client.model.{Client, ClientRoles}
 import zio.{IO, UIO, ZIO}
@@ -35,12 +35,8 @@ class RealmClient(keycloakConnectionInfo: KeycloakConnectionInfo, realm: String)
   def deleteRealm(implicit token: TokenResponse): IO[RequestError, StatusCode] =
     sendAndGetStatus(delete(())(realmUrl))
 
-  def createClient(client: Client)(implicit token: TokenResponse): IO[RequestError, String] =
-    for {
-      res      <- send(post(CreateClient(client))(uri"$realmUrl/clients"))
-      location <- IO.fromOption(res.header("Location")).mapError(_ => RequestError(Some(res.code), "no location in header"))
-      clientId = location.split("/").last
-    } yield clientId
+  def createClient(client: Client)(implicit token: TokenResponse): IO[ApiError, String] =
+    sendAndGetLocation(post(CreateClient(client))(uri"$realmUrl/clients"))
 
   def addClientRole(clientId: String, roleName: String)(implicit token: TokenResponse): IO[ApiError, StatusCode] = {
     for {
@@ -57,13 +53,11 @@ class RealmClient(keycloakConnectionInfo: KeycloakConnectionInfo, realm: String)
     */
   def addUser(userName: String, password: String, firstName: String, lastName: String, attributes: Map[String, String])(
       implicit token: TokenResponse
-  ): IO[RequestError, String] =
+  ): IO[ApiError, String] =
     for {
-      res <- send(post(CreateUser(enabled = true, userName, attributes.map {
-              case (key, value) => (key, Seq(value))
-            }, "", firstName, lastName))(uri"$realmUrl/users"))
-      location <- IO.fromOption(res.header("location")).mapError(_ => RequestError(Some(res.code), "user location not found"))
-      userId   = location.split("/").last
+      userId <- sendAndGetLocation(post(CreateUser(enabled = true, userName, attributes.map {
+                 case (key, value) => (key, Seq(value))
+               }, "", firstName, lastName))(uri"$realmUrl/users"))
       _ <- send(
             put(Map("type" -> "password", "value" -> password, "temporary" -> "false"))(
               uri"$realmUrl/users/$userId/reset-password"
@@ -108,6 +102,36 @@ class RealmClient(keycloakConnectionInfo: KeycloakConnectionInfo, realm: String)
           else UIO.unit
       status <- sendAndGetStatus(post(filtered)(uri"$realmUrl/users/$userId/role-mappings/realm"))
     } yield status
+
+  def createClientScope(name: String, userAttributesToMap: Set[String] = Set.empty, default: Boolean = false)(
+      implicit token: TokenResponse
+  ): IO[ApiError, Unit] =
+    for {
+      clientScopeId <- sendAndGetLocation(post(AddClientScope(name))(uri"$realmUrl/client-scopes"))
+      _ <- IO.foreach(userAttributesToMap)(attr =>
+            sendAndGetStatus(
+              post(ProtocolMapper(attr, UserAttributeProtocolMapperConfig(attr, attr)))(
+                uri"$realmUrl/client-scopes/$clientScopeId/protocol-mappers/models"
+              )
+            )
+          )
+      _ <- ZIO.when(default)(
+            sendAndGetStatus(
+              put(MakeScopeDefault(realm, clientScopeId))(
+                uri"$realmUrl/default-default-client-scopes/$clientScopeId"
+              )
+            )
+          )
+    } yield ()
+
+  def createAttributeProtocolMapper(name: String, clientId: String)(implicit token: TokenResponse): IO[ApiError, StatusCode] =
+    getClientNativeId(clientId).flatMap(cid =>
+      sendAndGetStatus(
+        post(ProtocolMapper(name, UserAttributeProtocolMapperConfig(name, name)))(
+          uri"$realmUrl/clients/$cid/protocol-mappers/models"
+        )
+      )
+    )
 
   private def getClientNativeId(clientId: String)(implicit token: TokenResponse): IO[ApiError, String] = {
     for {

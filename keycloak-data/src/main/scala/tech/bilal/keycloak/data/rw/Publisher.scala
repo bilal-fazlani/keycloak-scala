@@ -30,7 +30,7 @@ class Publisher {
         val addRealmRoles: TokenResponse => IO[RequestError, List[StatusCode]] =
           token => ZIO.foreach(realm.roles)(realmClient.addRealmRole(_)(token))
 
-        val addUsers: TokenResponse => IO[RequestError, List[String]] =
+        val addUsers: TokenResponse => IO[ApiError, List[String]] =
           token =>
             ZIO.foreach(realm.users)(u =>
               realmClient.addUser(u.username, u.password, u.firstName, u.lastName, u.attributes)(token)
@@ -54,14 +54,20 @@ class Publisher {
               )(token)
             )
 
+        val allAttributes = keycloakData.realms.flatMap(_.users).flatMap(_.attributes).toMap.keySet
+
+        val createDefaultClientScopeForAllAttributes: TokenResponse => IO[ApiError, Unit] =
+          (token: TokenResponse) => realmClient.createClientScope("user_attributes", allAttributes, default = true)(token)
+
         for {
           token <- keycloakHttpClient.getAccessToken(admin.username, admin.password, "master")
           _     <- realmClient.createRealm(overwrite)(token)
+          _     <- createDefaultClientScopeForAllAttributes(token)
           _     <- ZIO.collectAllPar(Seq(addRealmRoles(token), addUsers(token), addClients(token)))
           _     <- ZIO.collectAllPar(Seq(mapRealmRolesToUsers(token), mapClientRolesToUsers(token)))
         } yield ()
       }
-      .as(())
+      .unit
   }
 
   private def convertClient(client: data.Client): model.Client = {
