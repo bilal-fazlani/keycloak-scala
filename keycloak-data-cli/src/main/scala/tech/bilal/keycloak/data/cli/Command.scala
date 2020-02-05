@@ -2,9 +2,10 @@ package tech.bilal.keycloak.data.cli
 
 import caseapp._
 
-@AppName("keycloak data importer")
-@ProgName("kc-import")
-case class Options(
+sealed trait Command
+
+@CommandName("push")
+case class Push(
     @HelpMessage("path of config file")
     @ValueDescription("file")
     @ExtraName("f")
@@ -18,4 +19,4 @@ case class Options(
     @HelpMessage("show verbose logs")
     @ExtraName("v")
     verbose: Boolean = false
-)
+) extends Command
