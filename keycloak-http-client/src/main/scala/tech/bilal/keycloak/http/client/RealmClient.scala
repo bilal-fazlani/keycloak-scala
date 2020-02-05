@@ -4,7 +4,7 @@ import sttp.client._
 import sttp.model.StatusCode
 import tech.bilal.keycloak.http.client.ApiError.RequestError
 import tech.bilal.keycloak.http.client.dto.RoleRepresentation
-import tech.bilal.keycloak.http.client.dto.req.{CreateClient, CreateRealm, CreateUser}
+import tech.bilal.keycloak.http.client.dto.req.{CreateClient, CreateRealm, CreateUser, UserAttributeProtocolMapperConfig}
 import tech.bilal.keycloak.http.client.dto.res.{ClientNativeId, TokenResponse, UserNativeId}
 import tech.bilal.keycloak.http.client.model.{Client, ClientRoles}
 import zio.{IO, UIO, ZIO}
@@ -55,11 +55,13 @@ class RealmClient(keycloakConnectionInfo: KeycloakConnectionInfo, realm: String)
   /**
     * Creates user and returns user id
     */
-  def addUser(userName: String, password: String, firstName: String, lastName: String)(
+  def addUser(userName: String, password: String, firstName: String, lastName: String, attributes: Map[String, String])(
       implicit token: TokenResponse
   ): IO[RequestError, String] =
     for {
-      res      <- send(post(CreateUser(enabled = true, userName, Map.empty, "", firstName, lastName))(uri"$realmUrl/users"))
+      res <- send(post(CreateUser(enabled = true, userName, attributes.map {
+              case (key, value) => (key, Seq(value))
+            }, "", firstName, lastName))(uri"$realmUrl/users"))
       location <- IO.fromOption(res.header("location")).mapError(_ => RequestError(Some(res.code), "user location not found"))
       userId   = location.split("/").last
       _ <- send(

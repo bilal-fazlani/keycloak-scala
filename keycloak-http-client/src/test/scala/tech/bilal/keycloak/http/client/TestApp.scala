@@ -21,7 +21,7 @@ object TestApp extends App {
     _     <- realmClient.createRealm(overwrite = true)(token)
     _     <- realmClient.createClient(ConfidentialClient(clientId, clientId))(token)
     _     = print(s"client created: $clientId")
-    _     <- realmClient.addUser(username, "bilal", "bilal", "fazlani")(token)
+    _     <- realmClient.addUser(username, "bilal", "bilal", "fazlani", Map.empty)(token)
     _     = println(s"user created: $username")
     _     <- realmClient.addClientRole(clientId, roleName)(token)
     _     = println(s"created client role: $roleName for $clientId")

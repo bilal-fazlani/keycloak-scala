@@ -1,7 +1,6 @@
 import sbt._
 
 object Libs {
-  lazy val ficus          = "com.iheart"                 %% "ficus"       % "1.4.7"
   lazy val pureConfig     = "com.github.pureconfig"      %% "pureconfig"  % "0.12.2"
   lazy val `slf4j-simple` = "org.slf4j"                  % "slf4j-simple" % "2.0.0-alpha1"
   lazy val `case-app`     = "com.github.alexarchambault" %% "case-app"    % "2.0.0-M11"

@@ -25,7 +25,7 @@ object FileTestApp extends zio.App {
 
   override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, Int] =
     (for {
-      path <- argFile(args).orElse(staticResourceFile("conf3.conf"))
+      path <- argFile(args).orElse(staticResourceFile("application.conf"))
       data <- KeycloakData.fromFile(path)
       _    <- Task.effect(pprint.pprintln(data))
     } yield 0)

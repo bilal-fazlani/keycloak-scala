@@ -1,4 +1,4 @@
-package tech.bilal.keycloak.data.push
+package tech.bilal.keycloak.data.cli
 
 import caseapp._
 import caseapp.core.app.CaseApp

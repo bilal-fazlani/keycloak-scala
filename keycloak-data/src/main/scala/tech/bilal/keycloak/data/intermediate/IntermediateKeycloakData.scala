@@ -47,13 +47,20 @@ private[data] case class IntermediateKeycloakData(
             users.map {
               case (
                   username,
-                  IntermediateApplicationUser(password, firstName, lastName, IntermediateRoles(realmRoles, clientRoles))
+                  IntermediateApplicationUser(
+                    password,
+                    firstName,
+                    lastName,
+                    attributes,
+                    IntermediateRoles(realmRoles, clientRoles)
+                  )
                   ) =>
                 ApplicationUser(
                   username,
                   password,
                   firstName,
                   lastName,
+                  attributes,
                   Roles(
                     realmRoles,
                     clientRoles.map {

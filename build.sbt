@@ -38,7 +38,7 @@ lazy val `keycloak-scala` = project
     `keycloak-http-client`,
     `keycloak-data`,
     `embedded-keycloak`,
-    `keycloak-data-push-cli`
+    `keycloak-data-cli`
   )
 
 lazy val `keycloak-http-client` = project
@@ -58,7 +58,6 @@ lazy val `keycloak-data` = project
   .dependsOn(`keycloak-http-client`)
   .settings(
     libraryDependencies ++= Seq(
-      Libs.ficus,
       Zio.zio,
       Libs.pureConfig,
       Libs.pprint
@@ -81,8 +80,8 @@ lazy val `embedded-keycloak` =
       )
     )
 
-lazy val `keycloak-data-push-cli` = project
-  .in(file("keycloak-data-push-cli"))
+lazy val `keycloak-data-cli` = project
+  .in(file("keycloak-data-cli"))
   .dependsOn(`keycloak-data`)
   .settings(
     libraryDependencies ++= Seq(

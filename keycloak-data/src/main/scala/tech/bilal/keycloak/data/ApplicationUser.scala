@@ -5,5 +5,6 @@ case class ApplicationUser(
     password: String,
     firstName: String = "",
     lastName: String = "",
+    attributes: Map[String, String] = Map.empty,
     roles: Roles = Roles.empty
 )

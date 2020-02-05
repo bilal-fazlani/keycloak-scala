@@ -6,7 +6,7 @@ import io.bullet.borer.derivation.MapBasedCodecs
 case class CreateUser(
     enabled: Boolean,
     username: String,
-    attributes: Map[String, String],
+    attributes: Map[String, Seq[String]],
     emailVerified: String,
     firstName: String,
     lastName: String
