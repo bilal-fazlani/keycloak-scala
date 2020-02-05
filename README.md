@@ -1,3 +1,3 @@
 # Keycloak-scala
 
-![work in progress](https://www.nicepng.com/png/detail/137-1379308_website-work-in-progress.png)
+![work in progress](https://www.listscarl.it/wp-content/uploads/2019/08/Work-in-progress.png)
