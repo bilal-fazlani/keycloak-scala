@@ -5,6 +5,8 @@ import sttp.model.StatusCode
 import tech.bilal.keycloak.http.client.ApiError.RequestError
 import tech.bilal.keycloak.http.client.dto.RoleRepresentation
 import tech.bilal.keycloak.http.client.dto.req._
+import tech.bilal.keycloak.http.client.dto.req.protocol_mappers.{ProtocolMapper, ProtocolMapperConfig}
+import tech.bilal.keycloak.http.client.dto.req.protocol_mappers.ProtocolMapperConfig.UserAttributeProtocolMapperConfig
 import tech.bilal.keycloak.http.client.dto.res.{ClientNativeId, TokenResponse, UserNativeId}
 import tech.bilal.keycloak.http.client.model.{Client, ClientRoles}
 import zio.{IO, UIO, ZIO}
@@ -103,18 +105,27 @@ class RealmClient(keycloakConnectionInfo: KeycloakConnectionInfo, realm: String)
       status <- sendAndGetStatus(post(filtered)(uri"$realmUrl/users/$userId/role-mappings/realm"))
     } yield status
 
-  def createClientScope(name: String, userAttributesToMap: Set[String] = Set.empty, default: Boolean = false)(
+  def createClientScope(
+      name: String,
+      protocolMappers: Set[ProtocolMapper] = Set.empty,
+      default: Boolean = false
+  )(
       implicit token: TokenResponse
-  ): IO[ApiError, Unit] =
+  ): IO[ApiError, String] =
     for {
-      clientScopeId <- sendAndGetLocation(post(AddClientScope(name))(uri"$realmUrl/client-scopes"))
-      _ <- IO.foreach(userAttributesToMap)(attr =>
+      // CRAETE CLIENT SCOPE
+      clientScopeId <- sendAndGetLocation(post(ClientScope(name))(uri"$realmUrl/client-scopes"))
+
+      // CREATE ALL PROTOCOL MAPPERS
+      _ <- IO.foreach(protocolMappers) { protocolMapper =>
             sendAndGetStatus(
-              post(ProtocolMapper(attr, UserAttributeProtocolMapperConfig(attr, attr)))(
+              post(protocolMapper)(
                 uri"$realmUrl/client-scopes/$clientScopeId/protocol-mappers/models"
               )
             )
-          )
+          }
+
+      // MAKE SCOPE DEFAULT
       _ <- ZIO.when(default)(
             sendAndGetStatus(
               put(MakeScopeDefault(realm, clientScopeId))(
@@ -122,16 +133,7 @@ class RealmClient(keycloakConnectionInfo: KeycloakConnectionInfo, realm: String)
               )
             )
           )
-    } yield ()
-
-  def createAttributeProtocolMapper(name: String, clientId: String)(implicit token: TokenResponse): IO[ApiError, StatusCode] =
-    getClientNativeId(clientId).flatMap(cid =>
-      sendAndGetStatus(
-        post(ProtocolMapper(name, UserAttributeProtocolMapperConfig(name, name)))(
-          uri"$realmUrl/clients/$cid/protocol-mappers/models"
-        )
-      )
-    )
+    } yield clientScopeId
 
   private def getClientNativeId(clientId: String)(implicit token: TokenResponse): IO[ApiError, String] = {
     for {

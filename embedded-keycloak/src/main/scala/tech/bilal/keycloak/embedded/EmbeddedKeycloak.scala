@@ -7,7 +7,7 @@ import zio.IO
 class EmbeddedKeycloak(keycloakConnectionInfo: KeycloakConnectionInfo) {
   def startAndSeedData: IO[Any, StopHandle] = {
     for {
-      data <- KeycloakData.fromConfig
+      data <- KeycloakData.fromConfig()
       _    <- data.pushTo(keycloakConnectionInfo, overwrite = true)
     } yield new StopHandle(keycloakConnectionInfo, data)
   }

@@ -9,7 +9,7 @@ object Libs {
 }
 
 object Borer {
-  private val Version = "1.3.0"
+  private val Version = "1.4.0"
   private val Org     = "io.bullet"
 
   lazy val `borer-core`       = Org %% "borer-core"       % Version
@@ -19,14 +19,14 @@ object Borer {
 object Sttp {
   object Client {
     private val Org                  = "com.softwaremill.sttp.client"
-    private val Version              = "2.0.0-RC7"
+    private val Version              = "2.0.0-RC9"
     lazy val core                    = Org %% "core" % Version
     lazy val `backend-zio`           = Org %% "async-http-client-backend-zio" % Version
     lazy val `backend-zio-streaming` = Org %% "async-http-client-backend-zio-streams" % Version
   }
   object Model {
     private val Org     = "com.softwaremill.sttp.model"
-    private val Version = "1.0.0-RC6"
+    private val Version = "1.0.0-RC7"
     lazy val core       = Org %% "core" % Version
   }
 }

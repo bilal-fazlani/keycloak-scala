@@ -7,6 +7,7 @@ import tech.bilal.keycloak.data.KeycloakData
 import tech.bilal.keycloak.data.intermediate.IntermediateKeycloakData
 import zio.{IO, Task}
 import pureconfig.generic.auto._
+import tech.bilal.keycloak.http.client.KeycloakConnectionInfo
 
 class Reader {
   private implicit val reader: ConfigReader[KeycloakData] =
@@ -30,4 +31,6 @@ class Reader {
       data   = parsed.keycloakData
     } yield data
   }
+
+  def readFromServer(connectionInfo: KeycloakConnectionInfo): Unit = {}
 }

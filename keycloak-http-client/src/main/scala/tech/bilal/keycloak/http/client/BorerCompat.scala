@@ -7,8 +7,12 @@ import sttp.model.MediaType
 import scala.language.implicitConversions
 
 trait BorerCompat {
-  implicit def encode[T: Encoder](value: T): ByteArrayBody =
-    ByteArrayBody(Json.encode(value).toByteArray, Some(MediaType.ApplicationJson))
+  implicit def encode[T: Encoder](value: T): ByteArrayBody = {
+    val encode = Json.encode(value)
+    val result = ByteArrayBody(encode.toByteArray, Some(MediaType.ApplicationJson))
+    println(encode.toUtf8String)
+    result
+  }
 
   implicit def as[T: Decoder]: ResponseAs[Either[Array[Byte], T], Nothing] =
     asByteArray.map {

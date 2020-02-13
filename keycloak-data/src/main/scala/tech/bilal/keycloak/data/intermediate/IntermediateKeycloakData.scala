@@ -10,7 +10,7 @@ private[data] case class IntermediateKeycloakData(
     KeycloakData(
       adminUser,
       realms.map {
-        case (realmName, IntermediateRealm(roles, clients, users)) =>
+        case (realmName, IntermediateRealm(roles, clients, users, clientScopes)) =>
           Realm(
             realmName,
             roles,
@@ -67,6 +67,19 @@ private[data] case class IntermediateKeycloakData(
                       case (clientId, roles) => ClientRoles(clientId, roles)
                     }.toSet
                   )
+                )
+            }.toSet,
+            clientScopes.map {
+              case (scopeName, IntermediateClientScope(intermediateMappers, default)) =>
+                ClientScope(
+                  scopeName,
+                  intermediateMappers.map {
+                    case (mapperName, mapper) =>
+                      mapper match {
+                        case intermediate.UserAttribute(attributeName) => UserAttribute(mapperName, attributeName)
+                      }
+                  }.toSet,
+                  default
                 )
             }.toSet
           )

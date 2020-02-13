@@ -3,11 +3,14 @@ package tech.bilal.keycloak.data.rw
 import sttp.model.StatusCode
 import tech.bilal.keycloak.data
 import tech.bilal.keycloak.data.Client.{BearerOnly, Confidential, Public}
-import tech.bilal.keycloak.data.KeycloakData
+import tech.bilal.keycloak.data.{KeycloakData, UserAttribute, ProtocolMapper => ModelProtocolMapper}
 import tech.bilal.keycloak.http.client.ApiError.RequestError
+import tech.bilal.keycloak.http.client._
+import tech.bilal.keycloak.http.client.dto.req.protocol_mappers.ProtocolMapper
+import tech.bilal.keycloak.http.client.dto.req.protocol_mappers.ProtocolMapper.UserAttributeProtocolMapper
+import tech.bilal.keycloak.http.client.dto.req.protocol_mappers.ProtocolMapperConfig.UserAttributeProtocolMapperConfig
 import tech.bilal.keycloak.http.client.dto.res.TokenResponse
 import tech.bilal.keycloak.http.client.model.{BearerOnlyClient, ClientRoles, ConfidentialClient, PublicClient}
-import tech.bilal.keycloak.http.client._
 import zio.{IO, UIO, ZIO}
 
 class Publisher {
@@ -54,20 +57,26 @@ class Publisher {
               )(token)
             )
 
-        val allAttributes = keycloakData.realms.flatMap(_.users).flatMap(_.attributes).toMap.keySet
-
-        val createDefaultClientScopeForAllAttributes: TokenResponse => IO[ApiError, Unit] =
-          (token: TokenResponse) => realmClient.createClientScope("user_attributes", allAttributes, default = true)(token)
+        val addClientScopes: TokenResponse => IO[ApiError, List[String]] = (token: TokenResponse) =>
+          IO.foreach(realm.clientScopes)(cs =>
+            realmClient
+              .createClientScope(cs.name, cs.protocolMappers.map(convertProtocolMapperConfig), default = cs.default)(token)
+          )
 
         for {
           token <- keycloakHttpClient.getAccessToken(admin.username, admin.password, "master")
           _     <- realmClient.createRealm(overwrite)(token)
-          _     <- createDefaultClientScopeForAllAttributes(token)
+          _     <- addClientScopes(token)
           _     <- ZIO.collectAllPar(Seq(addRealmRoles(token), addUsers(token), addClients(token)))
           _     <- ZIO.collectAllPar(Seq(mapRealmRolesToUsers(token), mapClientRolesToUsers(token)))
         } yield ()
       }
       .unit
+  }
+
+  private def convertProtocolMapperConfig(protocolMapper: ModelProtocolMapper): ProtocolMapper = protocolMapper match {
+    case UserAttribute(name, attributeName) =>
+      UserAttributeProtocolMapper(name, UserAttributeProtocolMapperConfig(attributeName, attributeName))
   }
 
   private def convertClient(client: data.Client): model.Client = {
