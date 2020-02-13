@@ -1,3 +1,7 @@
 target
 .idea
 kc-data
+
+.bloop/
+.metals/
+project/metals.sbt
