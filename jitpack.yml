@@ -3,4 +3,4 @@ jdk:
 before_install:
   - ./adopt_open_jdk_11_setup.sh
 install:
-  sbt -Dsbt.log.noformat=true -Dprod.publish=true clean publishM2
+  sbt -J-Xss32m -Dsbt.log.noformat=true -Dprod.publish=true clean compile publishM2
