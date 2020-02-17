@@ -5,8 +5,7 @@ import sttp.model.StatusCode
 import tech.bilal.keycloak.http.client.ApiError.RequestError
 import tech.bilal.keycloak.http.client.dto.RoleRepresentation
 import tech.bilal.keycloak.http.client.dto.req._
-import tech.bilal.keycloak.http.client.dto.req.protocol_mappers.{ProtocolMapper, ProtocolMapperConfig}
-import tech.bilal.keycloak.http.client.dto.req.protocol_mappers.ProtocolMapperConfig.UserAttributeProtocolMapperConfig
+import tech.bilal.keycloak.http.client.dto.req.protocol_mappers.ProtocolMapper
 import tech.bilal.keycloak.http.client.dto.res.{ClientNativeId, TokenResponse, UserNativeId}
 import tech.bilal.keycloak.http.client.model.{Client, ClientRoles}
 import zio.{IO, UIO, ZIO}

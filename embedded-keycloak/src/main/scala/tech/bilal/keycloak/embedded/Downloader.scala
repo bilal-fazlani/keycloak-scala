@@ -22,7 +22,7 @@ class Downloader {
       for {
         x <- response
         y <- ZIO.fromEither(x.body)
-        z = y.foreachManaged(bb => Task.effect())
+//        z = y.
       } yield ()
       response
     }
