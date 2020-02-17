@@ -91,3 +91,15 @@ lazy val `keycloak-data-cli` = project
       Libs.`slf4j-simple`
     )
   )
+
+lazy val `keycloak-token-cli` = project
+  .in(file("keycloak-token-cli"))
+  .dependsOn(`keycloak-http-client`)
+  .settings(
+    libraryDependencies ++= Seq(
+      Libs.`case-app`,
+      Libs.`scala-uri`,
+      Libs.`jwt-core`,
+      Libs.pprint
+    )
+  )
